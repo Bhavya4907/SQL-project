@@ -1,0 +1,101 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div>
+    <p class="muted small"><a href="/hr">Dashboard</a> / Drive #<%= drive.drive_id %></p>
+    <h1><%= drive.role_title %> <span class="pill <%= fmt.tone(drive.status) %>"><%= fmt.label(drive.status) %></span></h1>
+    <p class="muted"><%= fmt.lpa(drive.package_lpa) %> · <%= drive.location ?? '' %> · Batch <%= drive.batch_year %> · <%= drive.branches %> ·
+      CGPA ≥ <%= drive.min_cgpa.toFixed(2) %>, ≤ <%= drive.max_backlogs %> backlogs · Apply by <%= fmt.datetime(drive.application_deadline) %></p>
+  </div>
+</div>
+
+<% if (drive.status === 'PENDING') { %><div class="notice">Awaiting approval by the placement cell. Students cannot see this drive yet.</div><% } %>
+
+<div class="stats">
+  <div class="stat"><b><%= drive.applications %></b><span>Applications</span></div>
+  <div class="stat"><b><%= drive.auto_rejected %></b><span>Auto-rejected (ineligible)</span></div>
+  <div class="stat"><b><%= drive.in_process %></b><span>In process</span></div>
+  <div class="stat"><b><%= drive.selected %></b><span>Selected</span></div>
+  <div class="stat"><b><%= drive.offers_accepted %> / <%= drive.offers_released %></b><span>Offers accepted / released</span></div>
+</div>
+
+<section class="card">
+  <h2>Rounds</h2>
+  <% if (!rounds.length) { %>
+    <p class="empty">The placement cell has not scheduled rounds for this drive yet.</p>
+  <% } else { %>
+    <div class="table-wrap"><table>
+      <thead><tr><th>#</th><th>Type</th><th>When</th><th>Venue</th><th class="num">Cutoff</th><th class="num">Results in</th><th class="num">Cleared</th><th></th></tr></thead>
+      <tbody>
+        <% for (const r of rounds) { %>
+          <tr>
+            <td><%= r.round_no %></td><td><%= fmt.label(r.round_type) %></td><td><%= fmt.datetime(r.scheduled_at) %></td>
+            <td><%= r.venue ?? '—' %></td><td class="num"><%= r.cutoff_score ?? '—' %></td>
+            <td class="num"><%= r.recorded %></td><td class="num"><%= r.cleared ?? 0 %></td>
+            <td><a class="btn small" href="/hr/drives/<%= drive.drive_id %>/rounds/<%= r.round_id %>">Enter results</a></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table></div>
+  <% } %>
+</section>
+
+<section class="card">
+  <div class="section-head">
+    <h2>Applicants</h2>
+    <div class="chips">
+      <% for (const [s, t] of [[null, 'All'], ['APPLIED', 'New'], ['SHORTLISTED', 'In process'], ['SELECTED', 'Selected'], ['REJECTED', 'Rejected'], ['WITHDRAWN', 'Withdrawn']]) { %>
+        <a class="btn small <%= filter === s ? 'primary' : '' %>" href="?<%= s ? `status=${s}` : '' %>"><%= t %></a>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (!applicants.length) { %>
+    <p class="empty">No applicants<%= filter ? ' with this status' : ' yet' %>.</p>
+  <% } else { %>
+    <form id="shortlist" method="post" action="/hr/drives/<%= drive.drive_id %>/shortlist">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+    </form>
+    <div class="table-wrap"><table>
+      <thead><tr><th></th><th>Student</th><th>Branch</th><th class="num">CGPA</th><th class="num">Backlogs</th><th>Skills</th><th>Rounds</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody>
+      <% for (const a of applicants) { const rs = resultsByApp.get(a.application_id) ?? []; %>
+        <tr>
+          <td><% if (a.status === 'APPLIED') { %><input type="checkbox" name="ids" value="<%= a.application_id %>" form="shortlist" aria-label="Shortlist <%= a.full_name %>"><% } %></td>
+          <td><b><%= a.full_name %></b><br><span class="muted small"><%= a.roll_no %></span>
+            <% if (/^https?:\/\//i.test(a.resume_url ?? '')) { %> · <a class="small" href="<%= a.resume_url %>" target="_blank" rel="noopener noreferrer">Resume</a><% } %></td>
+          <td><%= a.branch_code %></td>
+          <td class="num"><%= a.cgpa.toFixed(2) %></td>
+          <td class="num"><%= a.active_backlogs %></td>
+          <td class="small"><%= a.skills ?? '—' %></td>
+          <td><ul class="timeline"><% for (const r of rs) { %><li class="<%= r.result === 'CLEARED' ? 'good' : 'bad' %>"><%= r.round_no %><%= r.score != null ? `: ${r.score}` : '' %></li><% } %></ul></td>
+          <td><span class="pill <%= fmt.tone(a.status) %>"><%= fmt.label(a.status) %></span>
+            <% if (a.status_reason && a.status !== 'SELECTED') { %><div class="muted small"><%= a.status_reason %></div><% } %></td>
+          <td>
+            <% if (['APPLIED', 'SHORTLISTED'].includes(a.status)) { %>
+              <form class="inline" method="post" action="/hr/applications/<%= a.application_id %>/reject">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <input type="hidden" name="drive_id" value="<%= drive.drive_id %>">
+                <button class="btn small danger" data-confirm="Reject <%= a.full_name %>?">Reject</button>
+              </form>
+            <% } else if (a.status === 'SELECTED' && !a.offer_id) { %>
+              <form class="inline" method="post" action="/hr/applications/<%= a.application_id %>/offer">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <input type="hidden" name="drive_id" value="<%= drive.drive_id %>">
+                <input type="number" name="ctc_lpa" step="0.01" min="0.01" value="<%= drive.package_lpa %>" style="width:6.5rem" aria-label="CTC in LPA">
+                <input type="date" name="joining_date" aria-label="Joining date">
+                <button class="btn small primary">Release offer</button>
+              </form>
+            <% } else if (a.offer_id) { %>
+              <span class="small">Offer <%= fmt.lpa(a.offer_ctc) %></span> <span class="pill <%= fmt.tone(a.offer_status) %>"><%= fmt.label(a.offer_status) %></span>
+            <% } %>
+          </td>
+        </tr>
+      <% } %>
+      </tbody>
+    </table></div>
+    <% if (applicants.some((a) => a.status === 'APPLIED')) { %>
+      <div class="actions"><button class="btn primary" form="shortlist">Shortlist ticked applicants</button></div>
+    <% } %>
+  <% } %>
+</section>
+<%- include('../partials/foot') %>

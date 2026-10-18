@@ -1,0 +1,43 @@
+<%- include('../partials/head') %>
+<% const v = (k, d = '') => form[k] ?? d;
+   const chosen = new Set([].concat(form.skills ?? []).map(String)); %>
+<form class="card form-wide" method="post" action="/register/student">
+  <h1>Student registration</h1>
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+  <h3>Account</h3>
+  <div class="grid3">
+    <label>College email <input type="email" name="email" value="<%= v('email') %>" required></label>
+    <label>Password <input type="password" name="password" minlength="8" required autocomplete="new-password"></label>
+    <label>Confirm password <input type="password" name="confirm" minlength="8" required autocomplete="new-password"></label>
+  </div>
+
+  <h3>Academic profile</h3>
+  <div class="grid3">
+    <label>Full name <input name="full_name" value="<%= v('full_name') %>" required></label>
+    <label>Roll number <input name="roll_no" value="<%= v('roll_no') %>" required></label>
+    <label>Branch
+      <select name="branch_code" required>
+        <% for (const b of branches) { %><option value="<%= b.branch_code %>" <%= v('branch_code') === b.branch_code ? 'selected' : '' %>><%= b.branch_name %></option><% } %>
+      </select>
+    </label>
+    <label>Graduating year <input type="number" name="batch_year" min="2000" max="2100" value="<%= v('batch_year', new Date().getFullYear() + 1) %>" required></label>
+    <label>CGPA (0–10) <input type="number" name="cgpa" step="0.01" min="0" max="10" value="<%= v('cgpa') %>" required></label>
+    <label>Active backlogs <input type="number" name="active_backlogs" min="0" max="60" value="<%= v('active_backlogs', 0) %>" required></label>
+    <label>Phone <input name="phone" value="<%= v('phone') %>"></label>
+    <label class="span2">Resume link <input type="url" name="resume_url" value="<%= v('resume_url') %>" placeholder="https://…"></label>
+  </div>
+
+  <h3>Skills</h3>
+  <div class="chips">
+    <% for (const s of skills) { %>
+      <label class="chip"><input type="checkbox" name="skills" value="<%= s.skill_id %>" <%= chosen.has(String(s.skill_id)) ? 'checked' : '' %>> <%= s.skill_name %></label>
+    <% } %>
+  </div>
+
+  <div class="actions">
+    <button class="btn primary">Create account</button>
+    <a href="/login">I already have an account</a>
+  </div>
+</form>
+<%- include('../partials/foot') %>

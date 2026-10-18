@@ -1,0 +1,26 @@
+<%- include('../partials/head') %>
+<div class="page-head"><div><h1>Companies</h1><p class="muted">Approve a company before its HR can post drives.</p></div></div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Company</th><th>Industry</th><th>HR contacts</th><th class="num">Drives</th><th>Registered</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    <% for (const c of companies) { %>
+      <tr>
+        <td><b><%= c.company_name %></b><br><span class="muted small"><%= c.hq_location ?? '' %></span>
+          <% if (/^https?:\/\//i.test(c.website ?? '')) { %><br><a class="small" href="<%= c.website %>" target="_blank" rel="noopener noreferrer"><%= c.website.replace(/^https?:\/\//, '') %></a><% } %></td>
+        <td><%= c.industry ?? '—' %></td>
+        <td class="small"><%= c.hr_contacts ?? '—' %></td>
+        <td class="num"><%= c.drives %></td>
+        <td><%= fmt.date(c.registered_at) %></td>
+        <td><span class="pill <%= fmt.tone(c.status) %>"><%= fmt.label(c.status) %></span></td>
+        <td><% if (c.status === 'PENDING') { %>
+          <form class="inline" method="post" action="/officer/companies/<%= c.company_id %>/review">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <button class="btn small good" name="decision" value="approve">Approve</button>
+            <button class="btn small danger" name="decision" value="reject" data-confirm="Reject <%= c.company_name %>?">Reject</button>
+          </form>
+        <% } %></td>
+      </tr>
+    <% } %>
+  </tbody>
+</table></div>
+<%- include('../partials/foot') %>

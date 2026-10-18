@@ -1,0 +1,52 @@
+<%- include('../partials/head') %>
+<% const v = (k, d = '') => form[k] ?? d;
+   const picked = new Set([].concat(form.branches ?? [])); %>
+<% if (company.status !== 'APPROVED') { %>
+  <div class="notice">Your company must be approved by the placement cell before you can post drives.</div>
+<% } %>
+<form class="card form-wide" method="post" action="/hr/drives">
+  <h1>Post a drive</h1>
+  <p class="muted">The placement cell reviews the drive and schedules its rounds. Students only see it once it is approved.</p>
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+  <h3>Role</h3>
+  <div class="grid3">
+    <label class="span2">Role title <input name="role_title" value="<%= v('role_title') %>" required></label>
+    <label>Type
+      <select name="job_type">
+        <% for (const t of ['FULL_TIME', 'INTERNSHIP', 'INTERNSHIP_PPO']) { %>
+          <option value="<%= t %>" <%= v('job_type') === t ? 'selected' : '' %>><%= fmt.label(t) %></option>
+        <% } %>
+      </select>
+    </label>
+    <label>Package (LPA) <input type="number" name="package_lpa" step="0.01" min="0.01" value="<%= v('package_lpa') %>" required></label>
+    <label>Location <input name="location" value="<%= v('location') %>"></label>
+    <label>Openings <input type="number" name="openings" min="1" value="<%= v('openings') %>"></label>
+    <label class="span2" style="grid-column:1/-1">Description <textarea name="job_description" rows="4"><%= v('job_description') %></textarea></label>
+  </div>
+
+  <h3>Eligibility</h3>
+  <div class="grid3">
+    <label>Graduating batch <input type="number" name="batch_year" min="2000" max="2100" value="<%= v('batch_year', new Date().getFullYear() + 1) %>" required></label>
+    <label>Minimum CGPA <input type="number" name="min_cgpa" step="0.01" min="0" max="10" value="<%= v('min_cgpa', '6.00') %>" required></label>
+    <label>Max active backlogs <input type="number" name="max_backlogs" min="0" value="<%= v('max_backlogs', 0) %>" required></label>
+  </div>
+  <p class="small muted" style="margin:.9rem 0 .4rem">Eligible branches</p>
+  <div class="chips">
+    <% for (const b of branches) { %>
+      <label class="chip"><input type="checkbox" name="branches" value="<%= b.branch_code %>" <%= picked.has(b.branch_code) ? 'checked' : '' %>> <%= b.branch_name %></label>
+    <% } %>
+  </div>
+
+  <h3>Dates</h3>
+  <div class="grid3">
+    <label>Applications close <input type="datetime-local" name="application_deadline" value="<%= v('application_deadline') %>" required></label>
+    <label>Drive date <input type="date" name="drive_date" value="<%= v('drive_date') %>" required></label>
+  </div>
+
+  <div class="actions">
+    <button class="btn primary" <%= company.status !== 'APPROVED' ? 'disabled' : '' %>>Submit for approval</button>
+    <a href="/hr">Cancel</a>
+  </div>
+</form>
+<%- include('../partials/foot') %>

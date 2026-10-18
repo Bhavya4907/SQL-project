@@ -1,0 +1,10 @@
+</main>
+<script>
+  // Buttons with data-confirm ask before submitting their form.
+  document.addEventListener('submit', (e) => {
+    const btn = e.submitter;
+    if (btn?.dataset.confirm && !confirm(btn.dataset.confirm)) e.preventDefault();
+  });
+</script>
+</body>
+</html>

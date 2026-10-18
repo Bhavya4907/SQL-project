@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> · Placement Portal</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/">Placement<span>Portal</span></a>
+  <% if (user) {
+       const nav = {
+         STUDENT: [['/student', 'Drives'], ['/student/applications', 'My applications'], ['/student/offers', 'Offers'], ['/student/profile', 'Profile']],
+         HR:      [['/hr', 'Dashboard'], ['/hr/drives/new', 'Post a drive']],
+         ADMIN:   [['/officer', 'Dashboard'], ['/officer/companies', 'Companies'], ['/officer/drives', 'Drives'], ['/officer/students', 'Students'], ['/officer/reports', 'Reports'], ['/officer/policy', 'Policy']],
+       }[user.role]; %>
+    <nav>
+      <% for (const [href, text] of nav) {
+           const active = href === path || (href.split('/').length > 2 && path.startsWith(href)); %>
+        <a href="<%= href %>" class="<%= active ? 'active' : '' %>"><%= text %></a>
+      <% } %>
+    </nav>
+    <div class="who">
+      <span><%= user.name %><small><%= user.role === 'HR' ? user.companyName : user.role === 'ADMIN' ? 'Placement cell' : 'Student' %></small></span>
+      <form method="post" action="/logout">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="link">Sign out</button>
+      </form>
+    </div>
+  <% } %>
+</header>
+<main>
+  <% for (const f of flash) { %>
+    <div class="flash <%= f.type %>"><%= f.text %></div>
+  <% } %>

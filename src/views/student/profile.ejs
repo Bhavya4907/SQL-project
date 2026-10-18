@@ -1,0 +1,32 @@
+<%- include('../partials/head') %>
+<form class="card form-wide" method="post" action="/student/profile">
+  <h1>Profile</h1>
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+  <h3>Academic record</h3>
+  <p class="muted small">Maintained by the placement cell. Contact them if anything here is wrong.</p>
+  <div class="grid3">
+    <label>Name <input value="<%= me.full_name %>" disabled></label>
+    <label>Roll number <input value="<%= me.roll_no %>" disabled></label>
+    <label>Branch <input value="<%= me.branch_name %>" disabled></label>
+    <label>Batch <input value="<%= me.batch_year %>" disabled></label>
+    <label>CGPA <input value="<%= me.cgpa.toFixed(2) %>" disabled></label>
+    <label>Active backlogs <input value="<%= me.active_backlogs %>" disabled></label>
+  </div>
+
+  <h3>Contact and resume</h3>
+  <div class="grid3">
+    <label>Phone <input name="phone" value="<%= me.phone ?? '' %>"></label>
+    <label class="span2">Resume link <input type="url" name="resume_url" value="<%= me.resume_url ?? '' %>" placeholder="https://…"></label>
+  </div>
+
+  <h3>Skills</h3>
+  <div class="chips">
+    <% for (const s of skills) { %>
+      <label class="chip"><input type="checkbox" name="skills" value="<%= s.skill_id %>" <%= s.mine ? 'checked' : '' %>> <%= s.skill_name %></label>
+    <% } %>
+  </div>
+
+  <div class="actions"><button class="btn primary">Save profile</button></div>
+</form>
+<%- include('../partials/foot') %>

@@ -1,0 +1,32 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div><h1>Drives</h1><p class="muted">Approve drives, schedule rounds and close finished drives.</p></div>
+  <div class="chips">
+    <% for (const [s, t] of [[null, 'All'], ['PENDING', 'Pending'], ['APPROVED', 'Running'], ['CLOSED', 'Closed'], ['REJECTED', 'Rejected']]) { %>
+      <a class="btn small <%= status === s ? 'primary' : '' %>" href="?<%= s ? `status=${s}` : '' %>"><%= t %></a>
+    <% } %>
+  </div>
+</div>
+<% if (!drives.length) { %><p class="empty">No drives here.</p><% } else { %>
+<div class="table-wrap"><table>
+  <thead><tr><th>Drive</th><th>Batch</th><th class="num">Package</th><th>Deadline</th><th>Drive date</th><th>Status</th>
+    <th class="num">Applied</th><th class="num">In process</th><th class="num">Selected</th><th class="num">Accepted</th></tr></thead>
+  <tbody>
+    <% for (const d of drives) { %>
+      <tr>
+        <td><a href="/officer/drives/<%= d.drive_id %>"><b><%= d.company_name %></b> · <%= d.role_title %></a><br><span class="muted small"><%= d.branches %> · CGPA ≥ <%= d.min_cgpa.toFixed(2) %></span></td>
+        <td><%= d.batch_year %></td>
+        <td class="num"><%= fmt.lpa(d.package_lpa) %></td>
+        <td><%= fmt.datetime(d.application_deadline) %></td>
+        <td><%= fmt.date(d.drive_date) %></td>
+        <td><span class="pill <%= fmt.tone(d.status) %>"><%= fmt.label(d.status) %></span></td>
+        <td class="num"><%= d.applications %></td>
+        <td class="num"><%= d.in_process %></td>
+        <td class="num"><%= d.selected %></td>
+        <td class="num"><%= d.offers_accepted %></td>
+      </tr>
+    <% } %>
+  </tbody>
+</table></div>
+<% } %>
+<%- include('../partials/foot') %>

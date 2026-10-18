@@ -1,0 +1,49 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div><h1><%= company.company_name %></h1>
+    <p class="muted"><%= [company.industry, company.hq_location].filter(Boolean).join(' · ') %></p></div>
+  <% if (company.status === 'APPROVED') { %><a class="btn primary" href="/hr/drives/new">Post a drive</a><% } %>
+</div>
+
+<% if (company.status === 'PENDING') { %>
+  <div class="notice">Your company is waiting for approval from the placement cell. You can post drives once it is approved.</div>
+<% } else if (company.status === 'REJECTED') { %>
+  <div class="flash error">The placement cell did not approve this company. Contact them for details.</div>
+<% } %>
+
+<div class="stats">
+  <div class="stat"><b><%= totals.drives %></b><span>Drives</span></div>
+  <div class="stat"><b><%= totals.applications %></b><span>Applications</span></div>
+  <div class="stat"><b><%= totals.inProcess %></b><span>Candidates in process</span></div>
+  <div class="stat"><b><%= totals.offers %></b><span>Offers released</span></div>
+  <div class="stat"><b><%= totals.hires %></b><span>Offers accepted</span></div>
+</div>
+
+<h2>Your drives</h2>
+<% if (!drives.length) { %>
+  <p class="empty">No drives yet.<% if (company.status === 'APPROVED') { %> <a href="/hr/drives/new">Post your first drive</a>.<% } %></p>
+<% } else { %>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Role</th><th>Batch</th><th class="num">Package</th><th>Drive date</th><th>Status</th>
+        <th class="num">Applied</th><th class="num">In process</th><th class="num">Selected</th><th class="num">Offers</th><th class="num">Accepted</th></tr></thead>
+      <tbody>
+        <% for (const d of drives) { %>
+          <tr>
+            <td><a href="/hr/drives/<%= d.drive_id %>"><b><%= d.role_title %></b></a><br><span class="muted small"><%= d.branches %></span></td>
+            <td><%= d.batch_year %></td>
+            <td class="num"><%= fmt.lpa(d.package_lpa) %></td>
+            <td><%= fmt.date(d.drive_date) %></td>
+            <td><span class="pill <%= fmt.tone(d.status) %>"><%= fmt.label(d.status) %></span></td>
+            <td class="num"><%= d.applications %></td>
+            <td class="num"><%= d.in_process %></td>
+            <td class="num"><%= d.selected %></td>
+            <td class="num"><%= d.offers_released %></td>
+            <td class="num"><%= d.offers_accepted %></td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+<%- include('../partials/foot') %>

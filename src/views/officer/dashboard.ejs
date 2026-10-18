@@ -1,0 +1,63 @@
+<%- include('../partials/head') %>
+<div class="page-head"><div><h1>Placement cell</h1><p class="muted">What needs your attention, and how each season is going.</p></div></div>
+
+<% for (const s of seasons) { %>
+  <h2>Batch <%= s.batch_year %></h2>
+  <div class="stats">
+    <div class="stat"><b><%= fmt.pct(s.placement_pct) %></b><span><%= s.placed %> of <%= s.total_students %> placed</span></div>
+    <div class="stat"><b><%= fmt.lpa(s.avg_ctc_lpa) %></b><span>Average accepted package</span></div>
+    <div class="stat"><b><%= fmt.lpa(s.highest_ctc_lpa) %></b><span>Highest accepted package</span></div>
+    <div class="stat"><b><%= s.companies_visited %></b><span>Companies · <%= s.drives %> drives</span></div>
+    <div class="stat"><b><%= s.offers_accepted %> / <%= s.offers_released %></b><span>Offers accepted / released</span></div>
+  </div>
+<% } %>
+
+<div class="two-col">
+  <section class="card">
+    <div class="section-head"><h2>Companies awaiting approval</h2><a href="/officer/companies">All companies</a></div>
+    <% if (!pendingCompanies.length) { %><p class="empty">None.</p><% } %>
+    <% for (const c of pendingCompanies) { %>
+      <div class="section-head" style="border-top:1px solid var(--line);padding-top:.6rem">
+        <div><b><%= c.company_name %></b><div class="muted small"><%= [c.industry, c.hq_location].filter(Boolean).join(' · ') %> · registered <%= fmt.date(c.registered_at) %></div></div>
+        <form class="inline" method="post" action="/officer/companies/<%= c.company_id %>/review">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="btn small good" name="decision" value="approve">Approve</button>
+          <button class="btn small danger" name="decision" value="reject" data-confirm="Reject <%= c.company_name %>?">Reject</button>
+        </form>
+      </div>
+    <% } %>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><h2>Drives awaiting approval</h2><a href="/officer/drives?status=PENDING">All pending</a></div>
+    <% if (!pendingDrives.length) { %><p class="empty">None.</p><% } %>
+    <% for (const d of pendingDrives) { %>
+      <div class="section-head" style="border-top:1px solid var(--line);padding-top:.6rem">
+        <div><a href="/officer/drives/<%= d.drive_id %>"><b><%= d.company_name %> · <%= d.role_title %></b></a>
+          <div class="muted small"><%= fmt.lpa(d.package_lpa) %> · batch <%= d.batch_year %> · <%= d.branches %> · drive <%= fmt.date(d.drive_date) %></div></div>
+        <form class="inline" method="post" action="/officer/drives/<%= d.drive_id %>/review">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="btn small good" name="decision" value="approve">Approve</button>
+          <button class="btn small danger" name="decision" value="reject" data-confirm="Reject this drive?">Reject</button>
+        </form>
+      </div>
+    <% } %>
+  </section>
+</div>
+
+<% if (awaitingRounds.length) { %>
+  <section class="card">
+    <h2>Approved drives with no rounds scheduled</h2>
+    <% for (const d of awaitingRounds) { %>
+      <p style="margin:.3rem 0"><a href="/officer/drives/<%= d.drive_id %>"><%= d.company_name %> · <%= d.role_title %></a> <span class="muted small">drive on <%= fmt.date(d.drive_date) %></span></p>
+    <% } %>
+  </section>
+<% } %>
+
+<section class="card">
+  <h2>Upcoming rounds</h2>
+  <%- include('../partials/table', { rows: upcomingRounds, empty: 'No rounds scheduled ahead.', cols: [
+    ['scheduled_at', 'When', 'datetime'], ['company_name', 'Company'], ['role_title', 'Role'],
+    ['round_no', 'Round', 'num'], ['round_type', 'Type', 'label'], ['venue', 'Venue']] }) %>
+</section>
+<%- include('../partials/foot') %>

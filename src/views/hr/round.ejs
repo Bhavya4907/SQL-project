@@ -1,0 +1,50 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div>
+    <p class="muted small"><a href="/hr">Dashboard</a> / <a href="/hr/drives/<%= drive.drive_id %>"><%= drive.role_title %></a> / Round <%= round.round_no %></p>
+    <h1>Round <%= round.round_no %>: <%= fmt.label(round.round_type) %></h1>
+    <p class="muted"><%= fmt.datetime(round.scheduled_at) %> · <%= round.venue ?? '' %>
+      <%= round.cutoff_score != null ? ` · Cutoff ${round.cutoff_score}: leave the result on "By cutoff" and the score decides` : ' · No cutoff: pick a result for each candidate' %></p>
+  </div>
+</div>
+
+<section class="card">
+  <h2>Awaiting a result (<%= pending.length %>)</h2>
+  <% if (!pending.length) { %>
+    <p class="empty">Nobody is waiting on this round. Candidates appear here once shortlisted and through every earlier round.</p>
+  <% } else { %>
+    <form method="post">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Student</th><th>Branch</th><th class="num">CGPA</th><th>Score (0–100)</th><th>Result</th><th>Remarks</th></tr></thead>
+        <tbody>
+          <% for (const p of pending) { %>
+            <tr>
+              <td><b><%= p.full_name %></b><br><span class="muted small"><%= p.roll_no %></span>
+                <input type="hidden" name="app_ids" value="<%= p.application_id %>">
+                <input type="hidden" name="roll_<%= p.application_id %>" value="<%= p.roll_no %>"></td>
+              <td><%= p.branch_code %></td>
+              <td class="num"><%= p.cgpa.toFixed(2) %></td>
+              <td><input type="number" name="score_<%= p.application_id %>" step="0.01" min="0" max="100" style="width:6rem" aria-label="Score"></td>
+              <td><select name="result_<%= p.application_id %>" aria-label="Result">
+                <option value=""><%= round.cutoff_score != null ? 'By cutoff' : '— pick —' %></option>
+                <option value="CLEARED">Cleared</option><option value="REJECTED">Rejected</option><option value="ABSENT">Absent</option>
+              </select></td>
+              <td><input name="remarks_<%= p.application_id %>" maxlength="255" aria-label="Remarks"></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table></div>
+      <p class="muted small">Rows left blank are skipped. Rejected or absent candidates leave the drive; clearing the last round marks a candidate Selected.</p>
+      <div class="actions"><button class="btn primary">Save results</button></div>
+    </form>
+  <% } %>
+</section>
+
+<section class="card">
+  <h2>Recorded (<%= recorded.length %>)</h2>
+  <%- include('../partials/table', { rows: recorded, empty: 'No results recorded for this round yet.', cols: [
+    ['roll_no', 'Roll no'], ['full_name', 'Student'], ['score', 'Score', 'num'], ['result', 'Result', 'status'],
+    ['remarks', 'Remarks'], ['recorded_at', 'Recorded', 'datetime']] }) %>
+</section>
+<%- include('../partials/foot') %>

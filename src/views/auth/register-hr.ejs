@@ -1,0 +1,31 @@
+<%- include('../partials/head') %>
+<% const v = (k) => form[k] ?? ''; %>
+<form class="card form-wide" method="post" action="/register/hr">
+  <h1>Register your company</h1>
+  <p class="muted">The placement cell reviews every company before it can post drives.</p>
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+
+  <h3>Company</h3>
+  <div class="grid3">
+    <label>Company name <input name="company_name" value="<%= v('company_name') %>" required></label>
+    <label>Industry <input name="industry" value="<%= v('industry') %>"></label>
+    <label>Headquarters <input name="hq_location" value="<%= v('hq_location') %>"></label>
+    <label class="span2">Website <input type="url" name="website" value="<%= v('website') %>" placeholder="https://…"></label>
+  </div>
+
+  <h3>You (HR contact)</h3>
+  <div class="grid3">
+    <label>Full name <input name="full_name" value="<%= v('full_name') %>" required></label>
+    <label>Designation <input name="designation" value="<%= v('designation') %>"></label>
+    <label>Phone <input name="phone" value="<%= v('phone') %>"></label>
+    <label>Work email <input type="email" name="email" value="<%= v('email') %>" required></label>
+    <label>Password <input type="password" name="password" minlength="8" required autocomplete="new-password"></label>
+    <label>Confirm password <input type="password" name="confirm" minlength="8" required autocomplete="new-password"></label>
+  </div>
+
+  <div class="actions">
+    <button class="btn primary">Register company</button>
+    <a href="/login">I already have an account</a>
+  </div>
+</form>
+<%- include('../partials/foot') %>

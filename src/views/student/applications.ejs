@@ -1,0 +1,47 @@
+<%- include('../partials/head') %>
+<div class="page-head"><div><h1>My applications</h1><p class="muted">Every drive you applied to, round by round.</p></div></div>
+
+<% if (!apps.length) { %>
+  <p class="empty">You have not applied to any drive yet. <a href="/student">See open drives</a></p>
+<% } else { %>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Company / role</th><th class="num">Package</th><th>Applied</th><th>Status</th><th>Rounds</th><th></th></tr></thead>
+      <tbody>
+      <% for (const a of apps) {
+           const rs = byApp.get(a.application_id) ?? [];
+           const nextIdx = a.status === 'SHORTLISTED' ? rs.findIndex((r) => !r.result) : -1; %>
+        <tr>
+          <td><b><%= a.company_name %></b><br><span class="muted"><%= a.role_title %></span></td>
+          <td class="num"><%= fmt.lpa(a.package_lpa) %></td>
+          <td><%= fmt.date(a.applied_at) %></td>
+          <td>
+            <span class="pill <%= fmt.tone(a.status) %>"><%= fmt.label(a.status) %></span>
+            <% if (a.status_reason) { %><div class="muted small"><%= a.status_reason %></div><% } %>
+            <% if (a.offer_status) { %><div class="small">Offer: <span class="pill <%= fmt.tone(a.offer_status) %>"><%= fmt.label(a.offer_status) %></span></div><% } %>
+          </td>
+          <td>
+            <% if (!rs.length) { %><span class="muted small">Rounds not scheduled yet</span><% } %>
+            <ul class="timeline">
+              <% rs.forEach((r, i) => { const cls = r.result === 'CLEARED' ? 'good' : r.result ? 'bad' : i === nextIdx ? 'next' : ''; %>
+                <li class="<%= cls %>" title="<%= fmt.datetime(r.scheduled_at) %><%= r.score != null ? ` · score ${r.score}` : '' %>">
+                  <%= r.round_no %>. <%= fmt.label(r.round_type) %><%= r.result ? ` · ${fmt.label(r.result)}` : i === nextIdx ? ` · ${fmt.date(r.scheduled_at)}` : '' %>
+                </li>
+              <% }) %>
+            </ul>
+          </td>
+          <td>
+            <% if (['APPLIED', 'SHORTLISTED'].includes(a.status)) { %>
+              <form method="post" action="/student/applications/<%= a.application_id %>/withdraw">
+                <input type="hidden" name="_csrf" value="<%= csrf %>">
+                <button class="btn small danger" data-confirm="Withdraw from <%= a.company_name %>? You cannot re-apply to this drive.">Withdraw</button>
+              </form>
+            <% } %>
+          </td>
+        </tr>
+      <% } %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+<%- include('../partials/foot') %>

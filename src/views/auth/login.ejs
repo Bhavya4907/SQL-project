@@ -1,0 +1,18 @@
+<%- include('../partials/head') %>
+<section class="auth">
+  <div class="auth-intro">
+    <h1>Campus placements, end to end</h1>
+    <p>Companies post drives, students apply to the ones they qualify for, and the placement cell runs every round through to the offer letter.</p>
+  </div>
+  <form class="card" method="post" action="/login">
+    <h2>Sign in</h2>
+    <% if (typeof error !== 'undefined') { %><div class="flash error"><%= error %></div><% } %>
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <input type="hidden" name="next" value="<%= next %>">
+    <label>Email <input type="email" name="email" value="<%= email %>" required autofocus autocomplete="username"></label>
+    <label>Password <input type="password" name="password" required autocomplete="current-password"></label>
+    <button class="btn primary wide">Sign in</button>
+    <p class="muted small">New here? Register as a <a href="/register/student">student</a> or a <a href="/register/hr">company</a>.</p>
+  </form>
+</section>
+<%- include('../partials/foot') %>

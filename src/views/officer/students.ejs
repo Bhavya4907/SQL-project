@@ -1,0 +1,40 @@
+<%- include('../partials/head') %>
+<% const qs = new URLSearchParams(Object.entries(f).filter(([, v]) => v)).toString(); %>
+<div class="page-head"><div><h1>Students</h1><p class="muted">The placement cell keeps CGPA and backlogs up to date; eligibility is checked against them.</p></div></div>
+
+<form class="card inline" method="get" style="gap:.75rem">
+  <input name="q" value="<%= f.q %>" placeholder="Name or roll no" style="width:14rem">
+  <select name="batch"><option value="">All batches</option><% for (const b of batches) { %><option <%= f.batch === b ? 'selected' : '' %>><%= b %></option><% } %></select>
+  <select name="branch"><option value="">All branches</option><% for (const b of branches) { %><option <%= f.branch === b.branch_code ? 'selected' : '' %>><%= b.branch_code %></option><% } %></select>
+  <select name="status"><option value="">Placed or not</option><option value="PLACED" <%= f.status === 'PLACED' ? 'selected' : '' %>>Placed</option><option value="UNPLACED" <%= f.status === 'UNPLACED' ? 'selected' : '' %>>Unplaced</option></select>
+  <button class="btn">Filter</button>
+  <span class="muted small"><%= students.length %> student<%= students.length === 1 ? '' : 's' %></span>
+</form>
+
+<% if (!students.length) { %><p class="empty">No students match.</p><% } else { %>
+<div class="table-wrap"><table>
+  <thead><tr><th>Student</th><th>Branch</th><th>Batch</th><th>Skills</th><th>Placement</th><th>CGPA · Backlogs</th></tr></thead>
+  <tbody>
+    <% for (const s of students) { %>
+      <tr>
+        <td><b><%= s.full_name %></b><br><span class="muted small"><%= s.roll_no %> · <%= s.email %></span></td>
+        <td><%= s.branch_code %></td>
+        <td><%= s.batch_year %></td>
+        <td class="small"><%= s.skills ?? '—' %></td>
+        <td><span class="pill <%= fmt.tone(s.placement_status) %>"><%= fmt.label(s.placement_status) %></span>
+          <% if (s.placed_company) { %><div class="small"><%= s.placed_company %> · <%= fmt.lpa(s.placed_ctc_lpa) %></div><% } %></td>
+        <td>
+          <form class="inline" method="post" action="/officer/students/<%= s.student_id %>">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <input type="hidden" name="back" value="?<%= qs %>">
+            <input type="number" name="cgpa" step="0.01" min="0" max="10" value="<%= s.cgpa.toFixed(2) %>" style="width:5.5rem" aria-label="CGPA">
+            <input type="number" name="active_backlogs" min="0" value="<%= s.active_backlogs %>" style="width:4.5rem" aria-label="Active backlogs">
+            <button class="btn small">Save</button>
+          </form>
+        </td>
+      </tr>
+    <% } %>
+  </tbody>
+</table></div>
+<% } %>
+<%- include('../partials/foot') %>

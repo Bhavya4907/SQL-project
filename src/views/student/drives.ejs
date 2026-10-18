@@ -1,0 +1,72 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div>
+    <h1>Hi, <%= me.full_name.split(' ')[0] %></h1>
+    <p class="muted"><%= me.branch_name %> · Batch <%= me.batch_year %> · CGPA <%= me.cgpa.toFixed(2) %> · <%= me.active_backlogs %> active backlog<%= me.active_backlogs === 1 ? '' : 's' %></p>
+  </div>
+  <span class="pill <%= fmt.tone(me.placement_status) %>">
+    <%= me.placement_status === 'PLACED' ? `Placed · ${me.placed_company} · ${fmt.lpa(me.placed_ctc_lpa)}` : 'Not placed yet' %>
+  </span>
+</div>
+
+<% if (pendingOffers) { %>
+  <div class="flash info">You have <%= pendingOffers %> offer<%= pendingOffers > 1 ? 's' : '' %> waiting for your answer. <a href="/student/offers">Review offers</a></div>
+<% } %>
+
+<% if (upcoming.length) { %>
+  <section class="card">
+    <h2>Your upcoming rounds</h2>
+    <%- include('../partials/table', { rows: upcoming, cols: [
+      ['company_name', 'Company'], ['role_title', 'Role'], ['round_no', 'Round', 'num'],
+      ['round_type', 'Type', 'label'], ['scheduled_at', 'When', 'datetime'], ['venue', 'Venue']] }) %>
+  </section>
+<% } %>
+
+<div class="section-head">
+  <h2>Drives you can apply to</h2>
+  <span class="muted small"><%= eligible.length %> open for you</span>
+</div>
+<% if (!eligible.length) { %>
+  <p class="empty">No open drives match your profile right now. New drives appear here as soon as the placement cell approves them.</p>
+<% } else { %>
+  <div class="drive-list">
+    <% for (const d of eligible) { %>
+      <article class="card drive">
+        <header>
+          <div>
+            <h2><%= d.role_title %></h2>
+            <div class="company"><%= d.company_name %><%= d.industry ? ` · ${d.industry}` : '' %></div>
+          </div>
+          <div class="pkg"><%= fmt.lpa(d.package_lpa) %></div>
+        </header>
+        <dl>
+          <dt>Location</dt><dd><%= d.location ?? '—' %></dd>
+          <dt>Type</dt><dd><%= fmt.label(d.job_type) %><%= d.openings ? ` · ${d.openings} openings` : '' %></dd>
+          <dt>Branches</dt><dd><%= d.branches %></dd>
+          <dt>Criteria</dt><dd>CGPA ≥ <%= d.min_cgpa.toFixed(2) %>, ≤ <%= d.max_backlogs %> backlogs</dd>
+          <dt>Apply by</dt><dd><%= fmt.datetime(d.application_deadline) %></dd>
+          <dt>Drive on</dt><dd><%= fmt.date(d.drive_date) %></dd>
+        </dl>
+        <% if (d.application_status) { %>
+          <p><span class="pill <%= fmt.tone(d.application_status) %>"><%= fmt.label(d.application_status) %></span></p>
+        <% } else { %>
+          <form method="post" action="/student/drives/<%= d.drive_id %>/apply">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <button class="btn primary wide">Apply</button>
+          </form>
+        <% } %>
+      </article>
+    <% } %>
+  </div>
+<% } %>
+
+<% if (ineligible.length) { %>
+  <details class="card" style="margin-top:1.25rem">
+    <summary><%= ineligible.length %> other open drive<%= ineligible.length > 1 ? 's' : '' %> you are not eligible for</summary>
+    <div style="margin-top:.75rem">
+      <%- include('../partials/table', { rows: ineligible, cols: [
+        ['company_name', 'Company'], ['role_title', 'Role'], ['package_lpa', 'Package', 'lpa'], ['reason', 'Why not']] }) %>
+    </div>
+  </details>
+<% } %>
+<%- include('../partials/foot') %>

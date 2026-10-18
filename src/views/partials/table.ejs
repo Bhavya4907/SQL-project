@@ -1,0 +1,28 @@
+<%# Generic table: rows (array of objects), optional cols [[key, heading, kind]] where kind is lpa|pct|bar|num|label|date|datetime|status %>
+<% const columns = (typeof cols !== 'undefined' && cols) || (rows[0] ? Object.keys(rows[0]).map((k) => [k, fmt.label(k)]) : []); %>
+<% if (!rows.length) { %>
+  <p class="empty"><%= typeof empty !== 'undefined' ? empty : 'Nothing to show yet.' %></p>
+<% } else { %>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><% for (const [, h, kind] of columns) { %><th class="<%= ['lpa','pct','num'].includes(kind) ? 'num' : '' %>"><%= h %></th><% } %></tr></thead>
+      <tbody>
+        <% for (const r of rows) { %>
+          <tr>
+            <% for (const [k, , kind] of columns) { const v = r[k]; %>
+              <% if (kind === 'status') { %><td><span class="pill <%= fmt.tone(v) %>"><%= fmt.label(v) %></span></td>
+              <% } else if (kind === 'lpa') { %><td class="num"><%= fmt.lpa(v) %></td>
+              <% } else if (kind === 'bar') { %><td class="bar"><i style="width:calc((100% - 1.5rem) * <%= Math.min(100, Math.max(0, Number(v) || 0)) / 100 %>)"></i><b><%= fmt.pct(v) %></b></td>
+              <% } else if (kind === 'pct') { %><td class="num"><%= fmt.pct(v) %></td>
+              <% } else if (kind === 'label') { %><td><%= fmt.label(v) %></td>
+              <% } else if (kind === 'num') { %><td class="num"><%= v ?? '—' %></td>
+              <% } else if (kind === 'date') { %><td><%= fmt.date(v) %></td>
+              <% } else if (kind === 'datetime') { %><td><%= fmt.datetime(v) %></td>
+              <% } else { %><td><%= v ?? '—' %></td><% } %>
+            <% } %>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+<% } %>

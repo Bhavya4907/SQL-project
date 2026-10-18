@@ -1,0 +1,70 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div>
+    <p class="muted small"><a href="/officer/drives">Drives</a> / #<%= drive.drive_id %></p>
+    <h1><%= drive.company_name %> · <%= drive.role_title %> <span class="pill <%= fmt.tone(drive.status) %>"><%= fmt.label(drive.status) %></span></h1>
+    <p class="muted"><%= fmt.lpa(drive.package_lpa) %> · <%= fmt.label(drive.job_type) %> · <%= drive.location ?? '' %> · Batch <%= drive.batch_year %> · <%= drive.branches %> ·
+      CGPA ≥ <%= drive.min_cgpa.toFixed(2) %>, ≤ <%= drive.max_backlogs %> backlogs<br>
+      Applications close <%= fmt.datetime(drive.application_deadline) %> · Drive on <%= fmt.date(drive.drive_date) %></p>
+  </div>
+  <div class="inline">
+    <% if (drive.status === 'PENDING') { %>
+      <form class="inline" method="post" action="/officer/drives/<%= drive.drive_id %>/review">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn good" name="decision" value="approve">Approve drive</button>
+        <button class="btn danger" name="decision" value="reject" data-confirm="Reject this drive?">Reject</button>
+      </form>
+    <% } else if (drive.status === 'APPROVED') { %>
+      <form method="post" action="/officer/drives/<%= drive.drive_id %>/close">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn danger" data-confirm="Close this drive? Anyone still applied or shortlisted will be rejected, and no one else can apply.">Close drive</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<% if (drive.job_description) { %><section class="card"><h2>Description</h2><p style="white-space:pre-line;margin:0"><%= drive.job_description %></p></section><% } %>
+
+<div class="stats">
+  <% for (const f of funnel) { %><div class="stat"><b><%= f.n %></b><span><%= fmt.label(f.status) %></span></div><% } %>
+  <div class="stat"><b><%= drive.offers_accepted %> / <%= drive.offers_released %></b><span>Offers accepted / released</span></div>
+</div>
+
+<div class="two-col">
+  <section class="card">
+    <h2>Rounds</h2>
+    <%- include('../partials/table', { rows: rounds, empty: 'No rounds scheduled yet.', cols: [
+      ['round_no', '#', 'num'], ['round_type', 'Type', 'label'], ['scheduled_at', 'When', 'datetime'], ['venue', 'Venue'],
+      ['cutoff_score', 'Cutoff', 'num'], ['recorded', 'Results', 'num'], ['cleared', 'Cleared', 'num']] }) %>
+  </section>
+
+  <section class="card">
+    <h2>Schedule the next round</h2>
+    <% if (drive.status !== 'APPROVED') { %>
+      <p class="empty">Rounds can be scheduled once the drive is approved and until it is closed.</p>
+    <% } else { %>
+      <form method="post" action="/officer/drives/<%= drive.drive_id %>/rounds" class="grid3">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <label>Type
+          <select name="round_type" required><% for (const t of ROUND_TYPES) { %><option value="<%= t %>"><%= fmt.label(t) %></option><% } %></select>
+        </label>
+        <label>When <input type="datetime-local" name="scheduled_at" value="<%= fmt.dtInput(drive.drive_date + ' 10:00') %>" required></label>
+        <label>Venue <input name="venue" placeholder="Seminar hall / online"></label>
+        <label>Cutoff score <input type="number" name="cutoff_score" step="0.01" min="0" max="100" placeholder="optional"></label>
+        <div class="actions" style="grid-column:1/-1;margin-top:0"><button class="btn primary">Add round <%= rounds.length + 1 %></button></div>
+      </form>
+      <p class="muted small">With a cutoff, HR can enter just a score and the database decides cleared or rejected.</p>
+    <% } %>
+  </section>
+</div>
+
+<% if (eligible) { %>
+  <section class="card">
+    <div class="section-head"><h2>Eligible students (<%= eligible.length %>)</h2><span class="muted small">get_eligible_students(<%= drive.drive_id %>): criteria met and not blocked by placement policy</span></div>
+    <%- include('../partials/table', { rows: eligible, empty: 'No student currently meets the criteria.', cols: [
+      ['roll_no', 'Roll no'], ['full_name', 'Student'], ['branch_code', 'Branch'], ['cgpa', 'CGPA', 'num'],
+      ['active_backlogs', 'Backlogs', 'num'], ['placement_status', 'Placement', 'status'],
+      ['current_offer_lpa', 'Current offer', 'lpa'], ['application_status', 'Application', 'status']] }) %>
+  </section>
+<% } %>
+<%- include('../partials/foot') %>

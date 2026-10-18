@@ -1,0 +1,17 @@
+<%- include('../partials/head') %>
+<% const p = Object.fromEntries(policy.map((x) => [x.policy_key, x])); %>
+<form class="card narrow" method="post" action="/officer/policy">
+  <h1>Placement policy</h1>
+  <p class="muted">Checked by the database every time a student applies (trigger <code>trg_applications_bi</code>).</p>
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+  <label>High-package line (LPA)
+    <input type="number" name="HIGH_PACKAGE_LPA" step="0.01" min="0.01" value="<%= p.HIGH_PACKAGE_LPA.numeric_value %>" required>
+  </label>
+  <p class="small muted" style="margin-top:.3rem"><%= p.HIGH_PACKAGE_LPA.description %></p>
+  <label>Upgrade multiplier
+    <input type="number" name="UPGRADE_MULTIPLIER" step="0.01" min="1" value="<%= p.UPGRADE_MULTIPLIER.numeric_value %>" required>
+  </label>
+  <p class="small muted" style="margin-top:.3rem"><%= p.UPGRADE_MULTIPLIER.description %></p>
+  <div class="actions"><button class="btn primary">Save policy</button></div>
+</form>
+<%- include('../partials/foot') %>

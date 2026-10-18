@@ -1,0 +1,14 @@
+<%- include('../partials/head') %>
+<div class="page-head">
+  <div><h1>Reports</h1><p class="muted">Live from the database. The same queries are in <code>sql/06_reports.sql</code>.</p></div>
+  <nav class="chips"><% for (const r of results) { %><a class="btn small" href="#<%= r.id %>"><%= r.title %></a><% } %></nav>
+</div>
+<% for (const r of results) { %>
+  <section class="card" id="<%= r.id %>">
+    <h2><%= r.title %></h2>
+    <p class="muted small" style="margin-top:-.4rem"><%= r.blurb %></p>
+    <%- include('../partials/table', { rows: r.rows, cols: r.cols, empty: 'No data yet.' }) %>
+    <details style="margin-top:.75rem"><summary class="small muted">Show SQL</summary><pre class="small" style="overflow-x:auto;background:var(--surface-2);padding:.75rem;border-radius:8px"><%= r.sql.replace(/^\n/, '').replace(/^ {6}/gm, '') %></pre></details>
+  </section>
+<% } %>
+<%- include('../partials/foot') %>

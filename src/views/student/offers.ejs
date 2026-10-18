@@ -1,0 +1,43 @@
+<%- include('../partials/head') %>
+<div class="page-head"><div><h1>Offers</h1>
+  <p class="muted">Accepting an offer marks you as placed, declines your other open offers and withdraws your <%= openApps %> pending application<%= openApps === 1 ? '' : 's' %>, all in one step.</p></div></div>
+
+<div class="notice small">
+  Placement policy: after accepting an offer of <%= fmt.lpa(policy.HIGH_PACKAGE_LPA) %> or more you cannot apply anywhere else.
+  Below that, you may only apply to drives paying at least <%= policy.UPGRADE_MULTIPLIER %>× your accepted package.
+  <% if (me.placement_status === 'PLACED') { %>Accepting a new offer replaces your current one at <%= me.placed_company %>.<% } %>
+</div>
+
+<% if (!offers.length) { %>
+  <p class="empty">No offers yet. They appear here as soon as a company releases one to you.</p>
+<% } else { %>
+  <div class="drive-list">
+    <% for (const o of offers) { %>
+      <article class="card drive">
+        <header>
+          <div><h2><%= o.role_title %></h2><div class="company"><%= o.company_name %> · <%= o.location ?? '' %></div></div>
+          <div class="pkg"><%= fmt.lpa(o.ctc_lpa) %></div>
+        </header>
+        <dl>
+          <dt>Status</dt><dd><span class="pill <%= fmt.tone(o.status) %>"><%= fmt.label(o.status) %></span></dd>
+          <dt>Released</dt><dd><%= fmt.date(o.released_at) %></dd>
+          <dt>Joining</dt><dd><%= fmt.date(o.joining_date) %></dd>
+          <% if (o.responded_at) { %><dt>Responded</dt><dd><%= fmt.date(o.responded_at) %></dd><% } %>
+        </dl>
+        <% if (o.status === 'RELEASED') { %>
+          <div class="actions" style="margin-top:auto">
+            <form method="post" action="/student/offers/<%= o.offer_id %>/accept">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button class="btn primary" data-confirm="Accept <%= o.company_name %> at <%= fmt.lpa(o.ctc_lpa) %>? Your other open offers will be declined and pending applications withdrawn.">Accept</button>
+            </form>
+            <form method="post" action="/student/offers/<%= o.offer_id %>/decline">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <button class="btn danger" data-confirm="Decline the offer from <%= o.company_name %>? This cannot be undone.">Decline</button>
+            </form>
+          </div>
+        <% } %>
+      </article>
+    <% } %>
+  </div>
+<% } %>
+<%- include('../partials/foot') %>
